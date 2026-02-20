@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "ai-proxy": "cd ollama-proxy && (../.venv/Scripts/python.exe -m uvicorn server:app --host 127.0.0.1 --port 8001 --reload || python -m uvicorn server:app --host 127.0.0.1 --port 8001 --reload)",
     "import-data": "tsx scripts/import-data.ts",
     "seed-db": "tsx scripts/seed-database.ts"
   },

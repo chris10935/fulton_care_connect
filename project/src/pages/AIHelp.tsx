@@ -84,7 +84,7 @@ export function AIHelp() {
     {
       role: 'assistant',
       content:
-        "Hello! I'm your Fulton Care Connect AI assistant powered by Llama.\n\nTell me what kind of help you need and I'll search our directory and give you personalised recommendations.",
+        "Hello! I'm your Fulton Care Connect AI assistant.\n\nTell me what kind of help you need and I'll search our directory and give you personalised recommendations.",
     },
   ]);
   const [input, setInput] = useState('');

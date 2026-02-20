@@ -14,7 +14,7 @@ Usage
 
   # 2. Start this proxy
   #    cd ollama-proxy
-  #    uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+    #    uvicorn server:app --host 127.0.0.1 --port 8001 --reload
 """
 
 from __future__ import annotations
