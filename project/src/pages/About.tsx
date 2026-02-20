@@ -97,13 +97,6 @@ export function About() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">How to Use This Directory</h2>
             <div className="space-y-4 text-gray-700">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Search by ZIP Code</h3>
-                <p className="text-sm">
-                  Enter your ZIP code on the home page or in the directory filters to find
-                  resources near you.
-                </p>
-              </div>
-              <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Browse by Category</h3>
                 <p className="text-sm">
                   Click on category buttons to see all resources in that area (Food, Housing,

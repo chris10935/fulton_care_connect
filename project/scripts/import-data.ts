@@ -6,99 +6,135 @@ import { config } from 'dotenv';
 config();
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase credentials');
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase credentials (VITE_SUPABASE_URL and either SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_ANON_KEY)');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-interface CSVRow {
-  name: string;
-  phone: string;
-  address: string;
-  services: string;
-  hours: string;
-  eligibility: string;
-  website: string;
-  lat: string;
-  lng: string;
-  source: string;
-  category: string;
+// ---- category / source normalisation (shared with seed-database.ts) ----
+
+const CATEGORY_MAP: Record<string, string> = {
+  'mental health': 'Mental Health',
+  'healthcare': 'Healthcare',
+  'financial help': 'Financial',
+  'financial_help': 'Financial',
+  'financial coaching': 'Financial',
+  'homeless shelter': 'Shelter',
+  'homeless_shelter': 'Shelter',
+  'shelter': 'Housing',
+  'housing': 'Housing',
+  'housing_resources': 'Housing',
+  'food': 'Food',
+  'food_pantry': 'Food',
+  'food assiatance': 'Food',
+  'legal': 'Legal',
+  'legal aid': 'Legal',
+  'legal assistance': 'Legal',
+  'employment': 'Employment',
+  'job training': 'Employment',
+  'employment_training': 'Employment',
+  'transportation': 'Transportation',
+  'utilities': 'Utilities',
+  'career': 'Employment',
+  'youth services': 'Youth Services',
+  'family services': 'Family Services',
+};
+
+const SOURCE_MAP: Record<string, string> = {
+  'facaa (linked)': 'FACAA',
+  'facaa': 'FACAA',
+  'dfcs': 'DFCS',
+  'skye': 'SKYE',
+  'fulton_services_dataset': 'Fulton Services',
+};
+
+function normalizeCategory(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const key = raw.trim().toLowerCase();
+  return CATEGORY_MAP[key] || raw.trim();
 }
 
-function parseCSV(content: string): CSVRow[] {
-  const lines = content.split('\n');
-  const headers = lines[0].split(',');
+function normalizeSource(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const key = raw.trim().toLowerCase();
+  return SOURCE_MAP[key] || raw.trim();
+}
 
-  const rows: CSVRow[] = [];
+// ---- CSV parser (header-aware, handles quoted multi-line fields) ----
 
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
+interface CSVRecord { [key: string]: string; }
 
-    const values: string[] = [];
-    let currentValue = '';
-    let insideQuotes = false;
+function parseCSV(content: string): CSVRecord[] {
+  const records: CSVRecord[] = [];
+  let pos = 0;
 
-    for (let j = 0; j < lines[i].length; j++) {
-      const char = lines[i][j];
-
-      if (char === '"') {
-        insideQuotes = !insideQuotes;
-      } else if (char === ',' && !insideQuotes) {
-        values.push(currentValue.trim());
-        currentValue = '';
-      } else {
-        currentValue += char;
+  function parseField(): string {
+    if (pos >= content.length) return '';
+    if (content[pos] === '"') {
+      pos++;
+      let value = '';
+      while (pos < content.length) {
+        if (content[pos] === '"') {
+          if (pos + 1 < content.length && content[pos + 1] === '"') {
+            value += '"'; pos += 2;
+          } else { pos++; break; }
+        } else { value += content[pos]; pos++; }
       }
+      return value;
     }
-    values.push(currentValue.trim());
-
-    if (values.length === headers.length) {
-      const row: any = {};
-      headers.forEach((header, index) => {
-        row[header] = values[index] || '';
-      });
-      rows.push(row as CSVRow);
+    let value = '';
+    while (pos < content.length && content[pos] !== ',' && content[pos] !== '\n' && content[pos] !== '\r') {
+      value += content[pos]; pos++;
     }
+    return value;
   }
 
-  return rows;
+  function parseLine(): string[] {
+    const fields: string[] = [];
+    while (pos < content.length) {
+      fields.push(parseField());
+      if (pos < content.length && content[pos] === ',') { pos++; continue; }
+      if (pos < content.length && content[pos] === '\r') pos++;
+      if (pos < content.length && content[pos] === '\n') pos++;
+      break;
+    }
+    return fields;
+  }
+
+  const headers = parseLine().map((h) => h.trim());
+
+  while (pos < content.length) {
+    if (content[pos] === '\r' || content[pos] === '\n') { pos++; continue; }
+    const values = parseLine();
+    if (values.length === 0 || (values.length === 1 && !values[0])) continue;
+    const record: CSVRecord = {};
+    headers.forEach((header, i) => { record[header] = (values[i] ?? '').trim(); });
+    records.push(record);
+  }
+
+  return records;
 }
 
-function generateEmbeddingContent(row: CSVRow): string {
+function generateEmbeddingContent(row: CSVRecord, category: string | null): string {
   const parts: string[] = [];
-
   if (row.name) parts.push(row.name);
   if (row.services) parts.push(`Services: ${row.services}`);
   if (row.eligibility) parts.push(`Eligibility: ${row.eligibility}`);
   if (row.hours) parts.push(`Hours: ${row.hours}`);
-  if (row.address) parts.push(`Address: ${row.address}, ${row.zip_code || ''}`);
+  if (row.address) parts.push(`Address: ${row.address}${row.zip_code ? ', ' + row.zip_code : ''}`);
   if (row.phone) parts.push(`Phone: ${row.phone}`);
   if (row.website) parts.push(`Website: ${row.website}`);
-  if (row.category) parts.push(`Category: ${row.category}`);
-
+  if (category) parts.push(`Category: ${category}`);
   return parts.join('. ');
-}
-
-function extractCity(address: string): string | null {
-  if (!address) return null;
-  const match = address.match(/,\s*([^,]+),\s*GA/);
-  return match ? match[1].trim() : null;
-}
-
-function extractZipCode(address: string, zipField: string): string | null {
-  if (zipField) return zipField;
-  if (!address) return null;
-  const match = address.match(/\b(\d{5})\b/);
-  return match ? match[1] : null;
 }
 
 async function importData() {
   console.log('Reading CSV file...');
-  const csvPath = join(process.cwd(), 'data', 'fulton_phase1_data.csv');
+  const csvPath = join(process.cwd(), 'data', 'resources_rows.csv');
   const csvContent = readFileSync(csvPath, 'utf-8');
 
   console.log('Parsing CSV...');
@@ -108,30 +144,35 @@ async function importData() {
   console.log('Importing resources...');
 
   for (const row of rows) {
-    const city = extractCity(row.address) || 'Atlanta';
-    const zipCode = extractZipCode(row.address, row.lat);
+    const category = normalizeCategory(row.category);
+    const source = normalizeSource(row.source);
 
-    const resource = {
+    const resource: Record<string, unknown> = {
       name: row.name,
       phone: row.phone || null,
       address: row.address || null,
-      city: city,
-      county: 'Fulton',
-      zip_code: zipCode,
+      city: row.city || 'Atlanta',
+      county: row.county || 'Fulton',
+      zip_code: row.zip_code?.replace(/\s/g, '') || null,
       lat: row.lat ? parseFloat(row.lat) : null,
       lng: row.lng ? parseFloat(row.lng) : null,
-      category: row.category || null,
+      category,
       services: row.services || null,
       hours: row.hours || null,
       eligibility: row.eligibility || null,
       website: row.website || null,
-      source: row.source || null,
-      verified_date: new Date().toISOString().split('T')[0],
+      source,
+      verified_date: row.verified_date || new Date().toISOString().split('T')[0],
     };
+
+    // Preserve original UUID if present
+    if (row.id && row.id.match(/^[0-9a-f-]{36}$/i)) {
+      resource.id = row.id;
+    }
 
     const { data, error } = await supabase
       .from('resources')
-      .insert(resource)
+      .upsert(resource, { onConflict: 'id' })
       .select()
       .single();
 
@@ -140,14 +181,14 @@ async function importData() {
       continue;
     }
 
-    const embeddingContent = generateEmbeddingContent(row);
+    const embeddingContent = generateEmbeddingContent(row, category);
 
     const { error: embError } = await supabase
       .from('resource_embeddings')
-      .insert({
-        resource_id: data.id,
-        content: embeddingContent,
-      });
+      .upsert(
+        { resource_id: data.id, content: embeddingContent },
+        { onConflict: 'resource_id' }
+      );
 
     if (embError) {
       console.error(`Error inserting embedding for ${row.name}:`, embError.message);

@@ -1,18 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { Home, List, X, BarChart3, MessageSquare, Info, MapIcon } from 'lucide-react';
+import { List, X, BarChart3, MessageSquare, Info, MapIcon } from 'lucide-react';
 
 export function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = prev || '';
+    }
+    return () => {
+      document.body.style.overflow = prev || '';
+    };
+  }, [mobileMenuOpen]);
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col">
       <header className="bg-gradient-to-r from-[#2563eb] to-[#fb923c] shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                <Home className="w-6 h-6 text-white" />
-              </div>
+              <img src="/logo.png" alt="Fulton Care Connect" className="h-28 w-28 object-contain" />
               <span className="text-xl font-bold text-white">Fulton Care Connect</span>
             </Link>
 
@@ -37,7 +46,7 @@ export function Layout() {
 
         {/* Mobile Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 bg-black/40 flex justify-end md:hidden">
+          <div className="fixed inset-0 z-[10000] bg-black/40 flex justify-end md:hidden">
             <div className="w-64 bg-white h-full shadow-lg flex flex-col">
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <span className="text-lg font-bold text-[#2563eb]">Menu</span>
@@ -57,6 +66,8 @@ export function Layout() {
             <div className="flex-1" onClick={() => setMobileMenuOpen(false)} />
           </div>
         )}
+
+        {/* Prevent background scrolling when mobile menu open */}
       </header>
 
       <main className="flex-1">

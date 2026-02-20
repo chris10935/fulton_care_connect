@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UtensilsCrossed, Home as HomeIcon, HeartPulse, Brain, Bus, Lightbulb, Briefcase, Phone } from 'lucide-react';
-import { FULTON_ZIP_CODES, CATEGORIES } from '../lib/constants';
+import { Search, UtensilsCrossed, Home as HomeIcon, HeartPulse, Brain, Bus, Lightbulb, Briefcase } from 'lucide-react';
+import { CATEGORIES } from '../lib/constants';
 import { logSearch } from '../lib/analytics';
 
 const iconMap: Record<string, any> = {
@@ -20,23 +20,19 @@ const iconMap: Record<string, any> = {
 
 export function Home() {
   const navigate = useNavigate();
-  const [zipCode, setZipCode] = useState('');
+  const [city, setCity] = useState('');
   const [error, setError] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!zipCode) {
+    const trimmed = city.trim();
+    if (!trimmed) {
       navigate('/directory');
       return;
     }
 
-    if (!FULTON_ZIP_CODES.includes(zipCode)) {
-      setError('Please enter a valid Fulton County ZIP code.');
-      return;
-    }
-
-    logSearch(zipCode);
-    navigate(`/directory?zip=${zipCode}`);
+    logSearch(trimmed);
+    navigate(`/directory?city=${encodeURIComponent(trimmed)}`);
   };
 
   const handleCategoryClick = (categoryId: string) => {
@@ -46,28 +42,31 @@ export function Home() {
 
   return (
     <div>
-      <section className="bg-gradient-to-b from-[#2563eb] to-[#1d4ed8] text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#2563eb] to-[#1d4ed8] text-white py-20">
+        <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover z-0">
+          <source src="/atl.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        <div className="absolute inset-0 bg-black/30 z-10" aria-hidden="true" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-20">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-pop-up">
             Fulton Care Connect
           </h1>
-          <p className="text-xl md:text-2xl mb-8 text-blue-100">
+          <p className="text-xl md:text-2xl mb-8 text-blue-100 animate-pop-up animate-delay-150">
             Find free and low-cost help across Fulton County
           </p>
 
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto animate-pop-up animate-delay-300">
             <div className="bg-white rounded-lg shadow-lg p-2 flex gap-2">
               <input
                 type="text"
-                placeholder="Enter your ZIP code (optional)"
-                value={zipCode}
+                placeholder="Enter your city (optional)"
+                value={city}
                 onChange={(e) => {
-                  setZipCode(e.target.value);
+                  setCity(e.target.value);
                   setError('');
                 }}
                 className="flex-1 px-4 py-3 text-gray-900 rounded focus:outline-none"
-                maxLength={5}
-                pattern="[0-9]*"
               />
               <button
                 type="submit"
@@ -82,7 +81,7 @@ export function Home() {
             )}
           </form>
 
-          <div className="mt-6 flex flex-wrap gap-3 justify-center">
+          <div className="mt-6 flex flex-wrap gap-3 justify-center animate-pop-up animate-delay-500">
             <button
               onClick={() => navigate('/directory')}
               className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full transition-colors text-sm"
@@ -113,6 +112,7 @@ export function Home() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {CATEGORIES.map((category) => {
             const Icon = iconMap[category.icon] || HomeIcon;
+            const isUrlIcon = typeof category.icon === 'string' && (category.icon.startsWith('http') || category.icon.startsWith('data:'));
             return (
               <button
                 key={category.id}
@@ -120,7 +120,13 @@ export function Home() {
                 className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 flex flex-col items-center gap-3 group"
               >
                 <div className="w-12 h-12 bg-[#2563eb]/10 rounded-full flex items-center justify-center group-hover:bg-[#2563eb]/20 transition-colors">
-                  <Icon className="w-6 h-6 text-[#2563eb]" />
+                  {isUrlIcon ? (
+                    // external image icon
+                    // eslint-disable-next-line jsx-a11y/img-redundant-alt
+                    <img src={category.icon as string} alt={`${category.label} icon`} className="w-6 h-6 object-contain" />
+                  ) : (
+                    <Icon className="w-6 h-6 text-[#2563eb]" />
+                  )}
                 </div>
                 <span className="font-medium text-gray-900 text-center">
                   {category.label}
@@ -134,7 +140,7 @@ export function Home() {
       <section className="bg-[#fb923c]/10 py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-white rounded-lg shadow-md p-8">
-            <Phone className="w-12 h-12 text-[#2563eb] mx-auto mb-4" />
+            <img src="/icons8-phonelink-ring.gif" alt="Phone ringing" className="w-12 h-12 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Need Immediate Help?
             </h2>

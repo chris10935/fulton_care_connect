@@ -52,7 +52,7 @@ export function Map() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<MapFilters>({
-    zipCode: '',
+    city: '',
     categories: [],
     keyword: '',
     source: '',
@@ -70,9 +70,10 @@ export function Map() {
   }, []);
 
   useEffect(() => {
-    if (filters.zipCode || filters.categories.length > 0 || filters.keyword || filters.source) {
+    if (filters.city || filters.categories.length > 0 || filters.keyword || filters.source) {
+      // pass city into analytics in place of zip (analytics field named zip_code)
       logFilterMap(
-        filters.zipCode,
+        filters.city,
         filters.categories.join(','),
         filters.keyword,
         filters.source
@@ -102,8 +103,10 @@ export function Map() {
 
   const filteredResources = useMemo(() => {
     return resources.filter((resource) => {
-      if (filters.zipCode && resource.zip_code !== filters.zipCode) {
-        return false;
+      if (filters.city) {
+        const resCity = (resource.city || '').toLowerCase().trim();
+        const selCity = filters.city.toLowerCase().trim();
+        if (resCity !== selCity) return false;
       }
 
       if (filters.categories.length > 0 && !filters.categories.includes(resource.category || '')) {
@@ -123,7 +126,7 @@ export function Map() {
         return false;
       }
 
-      if (resource.zip_code && !FULTON_ZIP_CODES.includes(resource.zip_code.trim())) {
+      if (resource.zip_code && !FULTON_ZIP_CODES.includes(resource.zip_code.trim().replace(/\s/g, ''))) {
         return false;
       }
 
@@ -140,11 +143,18 @@ export function Map() {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col md:flex-row relative">
+    <div className="h-[calc(100vh-64px)] flex flex-col md:flex-row relative overflow-hidden">
+      {/* ---- Filter sidebar ---- */}
       <div
         className={`${
           showFilters ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 transition-transform duration-300 fixed md:relative z-30 w-80 h-full bg-white md:border-r border-gray-200 overflow-hidden flex flex-col`}
+        } md:translate-x-0 transition-transform duration-300 ease-in-out
+        fixed md:relative z-[1000] md:z-auto
+        top-0 left-0 w-[85vw] max-w-[320px] md:w-80
+        h-full md:h-auto
+        bg-white md:border-r border-gray-200
+        overflow-hidden flex flex-col
+        pt-[64px] md:pt-0`}
       >
         <MapFilterSidebar
           onFilterChange={setFilters}
@@ -152,40 +162,48 @@ export function Map() {
           isMobile={true}
           onClose={() => setShowFilters(false)}
         />
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-3 md:p-4 border-t border-gray-200 shrink-0">
           <MapLegend />
         </div>
       </div>
 
+      {/* ---- Backdrop overlay (mobile) ---- */}
       {showFilters && (
         <div
-          className="md:hidden fixed inset-0 bg-black/50 z-20"
+          className="md:hidden fixed inset-0 bg-black/50 z-[999]"
           onClick={() => setShowFilters(false)}
         />
       )}
 
-      <div className="flex-1 relative">
-        <div className="absolute top-4 left-4 z-10 flex gap-2">
+      {/* ---- Map area ---- */}
+      <div className="flex-1 relative min-h-0">
+        {/* Floating controls */}
+        <div className="absolute top-3 left-3 z-[500] flex gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="md:hidden bg-white shadow-lg rounded-lg p-3 hover:bg-gray-50 transition-colors"
+            className="md:hidden bg-white shadow-lg rounded-lg p-2.5 hover:bg-gray-50 transition-colors active:scale-95"
             aria-label="Toggle filters"
           >
-            {showFilters ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {showFilters ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
           <button
             onClick={() => setShowLayers(!showLayers)}
-            className="bg-white shadow-lg rounded-lg p-3 hover:bg-gray-50 transition-colors"
+            className="bg-white shadow-lg rounded-lg p-2.5 hover:bg-gray-50 transition-colors active:scale-95"
             aria-label="Toggle layers"
           >
-            <Layers className="w-6 h-6" />
+            <Layers className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Floating result count badge (mobile) */}
+        <div className="md:hidden absolute top-3 right-3 z-[500] bg-white/90 backdrop-blur-sm shadow rounded-full px-3 py-1.5">
+          <span className="text-xs font-semibold text-gray-700">{filteredResources.length} results</span>
+        </div>
+
         {showLayers && (
-          <div className="absolute top-20 left-4 z-10 bg-white shadow-lg rounded-lg p-4 w-64">
-            <h3 className="font-semibold text-gray-900 mb-3">Layers</h3>
+          <div className="absolute top-14 left-3 z-[500] bg-white shadow-lg rounded-lg p-3 w-56">
+            <h3 className="font-semibold text-gray-900 mb-2 text-sm">Layers</h3>
             <div className="space-y-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -236,9 +254,9 @@ export function Map() {
                       click: () => handleMarkerClick(resource.id),
                     }}
                   >
-                    <Popup>
-                      <div className="p-2 min-w-[250px]">
-                        <h3 className="font-bold text-gray-900 mb-2">{resource.name}</h3>
+                    <Popup maxWidth={280} minWidth={200}>
+                      <div className="p-1.5 sm:p-2 min-w-[180px] sm:min-w-[250px] max-w-[260px] sm:max-w-[300px]">
+                        <h3 className="font-bold text-gray-900 mb-1.5 text-sm sm:text-base leading-tight">{resource.name}</h3>
                         {resource.category && (
                           <p className="text-sm text-gray-600 mb-2">
                             <strong>Category:</strong> {resource.category}

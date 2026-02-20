@@ -17,17 +17,17 @@ export const FULTON_ZIP_CODES = [
 ];
 
 export const CATEGORIES = [
-  { id: 'food_pantry', label: 'Food', icon: 'UtensilsCrossed' },
-  { id: 'housing_resources', label: 'Housing', icon: 'Home' },
-  { id: 'homeless_shelter', label: 'Shelter', icon: 'Hotel' },
-  { id: 'Healthcare', label: 'Healthcare', icon: 'HeartPulse' },
-  { id: 'Mental health', label: 'Mental Health', icon: 'Brain' },
-  { id: 'Transportation', label: 'Transportation', icon: 'Bus' },
-  { id: 'Utilities', label: 'Utilities', icon: 'Lightbulb' },
-  { id: 'Employment', label: 'Employment', icon: 'Briefcase' },
-  { id: 'employment_training', label: 'Job Training', icon: 'GraduationCap' },
-  { id: 'financial_coaching', label: 'Financial Help', icon: 'DollarSign' },
-  { id: 'Legal', label: 'Legal Aid', icon: 'Scale' },
+  { id: 'Food', label: 'Food', icon: 'https://img.icons8.com/?size=100&id=5eq6oiP3hfPe&format=png&color=000000' },
+  { id: 'Housing', label: 'Housing', icon: 'https://img.icons8.com/?size=100&id=SMY8y2KifwMB&format=png&color=000000' },
+  { id: 'Healthcare', label: 'Healthcare', icon: 'https://img.icons8.com/?size=100&id=14799&format=png&color=000000' },
+  { id: 'Mental Health', label: 'Mental Health', icon: 'https://img.icons8.com/?size=100&id=DYuG8jKiYeUD&format=png&color=000000' },
+  { id: 'Transportation', label: 'Transportation', icon: 'https://img.icons8.com/?size=100&id=15158&format=png&color=000000' },
+  { id: 'Utilities', label: 'Utilities', icon: 'https://img.icons8.com/?size=100&id=20544&format=png&color=000000' },
+  { id: 'Employment', label: 'Employment', icon: 'https://img.icons8.com/?size=100&id=104075&format=png&color=000000' },
+  { id: 'Financial', label: 'Financial', icon: 'https://img.icons8.com/?size=100&id=20777&format=png&color=000000' },
+  { id: 'Legal', label: 'Legal', icon: 'https://img.icons8.com/?size=100&id=20777&format=png&color=000000' },
+  { id: 'Youth Services', label: 'Youth Services', icon: 'https://img.icons8.com/?size=100&id=12928&format=png&color=000000' },
+  { id: 'Family Services', label: 'Family Services', icon: 'https://img.icons8.com/?size=100&id=Bmk25pRSmDNS&format=png&color=000000' },
 ];
 
 export const CRISIS_HOTLINES = [
@@ -55,16 +55,17 @@ export const MAP_CENTER: [number, number] = [33.7490, -84.3880];
 export const MAP_ZOOM = 10;
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  food_pantry: '#16a34a',
-  housing_resources: '#dc2626',
-  homeless_shelter: '#ea580c',
+  Food: '#16a34a',
+  Housing: '#dc2626',
+  Shelter: '#ea580c',
   Healthcare: '#2563eb',
-  'Mental health': '#9333ea',
+  'Mental Health': '#9333ea',
   Transportation: '#0891b2',
   Utilities: '#eab308',
   Employment: '#7c3aed',
-  employment_training: '#6366f1',
-  financial_coaching: '#059669',
+  Financial: '#059669',
   Legal: '#0f766e',
+  'Youth Services': '#ec4899',
+  'Family Services': '#8b5cf6',
   default: '#6b7280',
 };

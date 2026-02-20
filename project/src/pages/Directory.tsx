@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search, MapPin, Phone, Globe, Clock, Map as MapIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { FULTON_ZIP_CODES, CATEGORIES } from '../lib/constants';
+import { CATEGORIES } from '../lib/constants';
 import { logSearch } from '../lib/analytics';
 import type { Resource } from '../lib/types';
 
@@ -14,11 +14,9 @@ export function Directory() {
   const [loading, setLoading] = useState(true);
 
   const [filters, setFilters] = useState({
-    zipCode: searchParams.get('zip') || '',
     category: searchParams.get('category') || '',
     keyword: searchParams.get('keyword') || '',
   });
-  const [zipError, setZipError] = useState('');
 
   useEffect(() => {
     fetchResources();
@@ -42,20 +40,11 @@ export function Directory() {
   }
 
   function handleSearch() {
-    if (filters.zipCode && !FULTON_ZIP_CODES.includes(filters.zipCode)) {
-      setZipError('Please enter a valid Fulton County ZIP code.');
-      return;
-    }
-    setZipError('');
-    logSearch(filters.zipCode, filters.category, filters.keyword);
+    logSearch(undefined, filters.category, filters.keyword);
     fetchResources();
   }
 
   const filteredResources = resources.filter((resource) => {
-    if (filters.zipCode && resource.zip_code !== filters.zipCode) {
-      return false;
-    }
-
     if (filters.category && resource.category !== filters.category) {
       return false;
     }
@@ -78,25 +67,7 @@ export function Directory() {
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Resource Directory</h1>
 
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ZIP Code
-              </label>
-              <input
-                type="text"
-                value={filters.zipCode}
-                onChange={(e) => {
-                  setFilters({ ...filters, zipCode: e.target.value });
-                  setZipError('');
-                }}
-                placeholder="Enter ZIP code"
-                maxLength={5}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563eb] focus:border-transparent"
-              />
-              {zipError && <p className="text-red-600 text-sm mt-1">{zipError}</p>}
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Category
@@ -165,7 +136,7 @@ export function Directory() {
           <p className="text-gray-600">No resources found matching your criteria.</p>
           <button
             onClick={() => {
-              setFilters({ zipCode: '', category: '', keyword: '' });
+              setFilters({ category: '', keyword: '' });
               fetchResources();
             }}
             className="mt-4 text-[#2563eb] hover:underline"
