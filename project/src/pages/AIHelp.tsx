@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, AlertCircle, Phone } from 'lucide-react';
+import { Send, AlertCircle, Phone, ExternalLink, PhoneCall } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { logAIQuery } from '../lib/analytics';
 import { CRISIS_HOTLINES } from '../lib/constants';
@@ -29,6 +29,10 @@ const CHAT_API = import.meta.env.VITE_CHAT_API;
 const SYSTEM_PROMPT = `You are Fulton Care Connect AI — a helpful, empathetic assistant that connects Fulton County, Georgia residents with free and low-cost community resources (food, housing, healthcare, mental health, employment, transportation, legal aid, education, and financial assistance).
 
 Rules:
+• Only provide information and resources that are within Fulton County, GA.
+• When asked about services, return only Fulton County government pages, local offices, or providers physically located in Fulton County.
+• If you cannot find a Fulton County answer, say: "I don't have Fulton County information for that — would you like general Fulton County area guidance or help locating a local Fulton County contact?"
+• Do not suggest resources from other counties.
 • Always be kind, concise, and encouraging.
 • When the user describes a need, recommend the matching resources that are provided to you in the context.
 • If a crisis keyword is detected the UI already shows an alert — reinforce it and provide 988 / 911 info.
@@ -73,6 +77,121 @@ async function askOllama(
     }
     throw err;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Rich message renderer (links → buttons, phones → call buttons)     */
+/* ------------------------------------------------------------------ */
+
+/** Regex for URLs — matches http(s) and bare www. links */
+const URL_RE = /https?:\/\/[^\s)\]>]+|www\.[^\s)\]>]+/gi;
+
+/** Regex for US phone numbers like (404) 330-6085, 404-330-6085, 877-473-3478 */
+const PHONE_RE = /\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g;
+
+/**
+ * Pre-process AI text to strip markdown link syntax and leftover brackets
+ * around URLs so the button renderer gets clean text.
+ *
+ * Handles:
+ *   [label](http://…)  →  http://…
+ *   [http://…]          →  http://…
+ *   (http://…)          →  http://…
+ */
+function cleanLinkSyntax(text: string): string {
+  // Markdown links: [any text](url) → url
+  text = text.replace(/\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g, '$2');
+  // Bracketed URLs: [url] → url
+  text = text.replace(/\[(https?:\/\/[^\]\s]+)\]/g, '$1');
+  text = text.replace(/\[(www\.[^\]\s]+)\]/g, '$1');
+  // Parenthesized URLs: (url) → url  (only when clearly wrapping a URL)
+  text = text.replace(/\((https?:\/\/[^\s)]+)\)/g, '$1');
+  text = text.replace(/\((www\.[^\s)]+)\)/g, '$1');
+  return text;
+}
+
+function RichMessage({ text }: { text: string }) {
+  const cleaned = cleanLinkSyntax(text);
+  // Split text into segments: plain text, URL buttons, and phone buttons
+  const segments: { type: 'text' | 'url' | 'phone'; value: string }[] = [];
+
+  // Combine both patterns to find all matches in order
+  const combined = new RegExp(`(${URL_RE.source})|(${PHONE_RE.source})`, 'gi');
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = combined.exec(cleaned)) !== null) {
+    // Push preceding plain text
+    if (match.index > lastIndex) {
+      segments.push({ type: 'text', value: cleaned.slice(lastIndex, match.index) });
+    }
+
+    if (match[1]) {
+      // URL match
+      segments.push({ type: 'url', value: match[1] });
+    } else {
+      // Phone match
+      segments.push({ type: 'phone', value: match[0] });
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Push any remaining text
+  if (lastIndex < cleaned.length) {
+    segments.push({ type: 'text', value: cleaned.slice(lastIndex) });
+  }
+
+  return (
+    <div className="whitespace-pre-wrap space-y-1">
+      {segments.map((seg, i) => {
+        if (seg.type === 'url') {
+          const href = seg.value.startsWith('http') ? seg.value : `https://${seg.value}`;
+          // Show a friendly label from the hostname
+          let label = seg.value;
+          try {
+            label = new URL(href).hostname.replace(/^www\./, '');
+          } catch { /* keep raw */ }
+          return (
+            <a
+              key={i}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors mx-1"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              {label}
+            </a>
+          );
+        }
+
+        if (seg.type === 'phone') {
+          const digits = seg.value.replace(/[^0-9]/g, '');
+          return (
+            <a
+              key={i}
+              href={`tel:${digits}`}
+              className="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors mx-1"
+            >
+              <PhoneCall className="w-3.5 h-3.5" />
+              {seg.value}
+            </a>
+          );
+        }
+
+        // Plain text — render bold markdown (**text**)
+        const parts = seg.value.split(/\*\*(.+?)\*\*/g);
+        return (
+          <span key={i}>
+            {parts.map((part, j) =>
+              j % 2 === 1 ? <strong key={j}>{part}</strong> : part,
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -220,7 +339,7 @@ export function AIHelp() {
                     : 'bg-[#fb923c]/15 text-gray-900 rounded-bl-sm'
                 }`}
               >
-                <p className="whitespace-pre-wrap">{message.content}</p>
+                <RichMessage text={message.content} />
 
                 {message.resources && message.resources.length > 0 && (
                   <div className="mt-4 space-y-3">
