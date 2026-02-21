@@ -24,7 +24,7 @@ interface OllamaResponse {
 /*  Ollama backend helper                                              */
 /* ------------------------------------------------------------------ */
 
-const OLLAMA_PROXY = 'http://localhost:8001/api/chat';
+const CHAT_API = import.meta.env.VITE_CHAT_API;
 
 const SYSTEM_PROMPT = `You are Fulton Care Connect AI — a helpful, empathetic assistant that connects Fulton County, Georgia residents with free and low-cost community resources (food, housing, healthcare, mental health, employment, transportation, legal aid, education, and financial assistance).
 
@@ -48,7 +48,7 @@ async function askOllama(
   const timeoutId = setTimeout(() => controller.abort(), 120_000); // 2 min timeout
 
   try {
-    const res = await fetch(OLLAMA_PROXY, {
+    const res = await fetch(CHAT_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -185,7 +185,7 @@ export function AIHelp() {
         {
           role: 'assistant',
           content:
-            'I had trouble connecting to the AI service. Please make sure the Ollama backend is running at http://localhost:8001.\n\nIn the meantime you can browse the directory or call **211** for assistance.',
+            `I had trouble connecting to the AI service. Please make sure the backend is reachable at ${CHAT_API}.\n\nIn the meantime you can browse the directory or call **211** for assistance.`,
         },
       ]);
     } finally {
