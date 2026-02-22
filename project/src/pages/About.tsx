@@ -1,11 +1,43 @@
+import { useEffect } from 'react';
 import { Mail, Heart, Database, Shield, Users } from 'lucide-react';
 
 export function About() {
+  useEffect(() => {
+    const cards = document.querySelectorAll<HTMLElement>('.scroll-pop-card');
+
+    if (!('IntersectionObserver' in window)) {
+      cards.forEach((card) => {
+        card.classList.add('pop-in');
+      });
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('pop-in');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    cards.forEach((card) => observer.observe(card));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-4xl font-bold text-gray-900 mb-8">About Fulton Care Connect</h1>
 
-      <section className="bg-white rounded-lg shadow-md p-8 mb-8">
+      <section className="border-b border-gray-200 pb-8 mb-8 scroll-pop-card">
         <div className="flex items-start gap-4 mb-6">
           <Heart className="w-8 h-8 text-[#2563eb] flex-shrink-0" />
           <div>
@@ -25,7 +57,7 @@ export function About() {
         </div>
       </section>
 
-      <section className="bg-white rounded-lg shadow-md p-8 mb-8">
+      <section className="border-b border-gray-200 pb-8 mb-8 scroll-pop-card">
         <div className="flex items-start gap-4 mb-6">
           <Database className="w-8 h-8 text-[#2563eb] flex-shrink-0" />
           <div>
@@ -60,7 +92,7 @@ export function About() {
         </div>
       </section>
 
-      <section className="bg-white rounded-lg shadow-md p-8 mb-8">
+      <section className="border-b border-gray-200 pb-8 mb-8 scroll-pop-card">
         <div className="flex items-start gap-4 mb-6">
           <Shield className="w-8 h-8 text-[#fb923c] flex-shrink-0" />
           <div>
@@ -90,7 +122,7 @@ export function About() {
         </div>
       </section>
 
-      <section className="bg-white rounded-lg shadow-md p-8 mb-8">
+      <section className="border-b border-gray-200 pb-8 mb-8 scroll-pop-card">
         <div className="flex items-start gap-4 mb-6">
           <Users className="w-8 h-8 text-[#2563eb] flex-shrink-0" />
           <div>
@@ -122,19 +154,19 @@ export function About() {
         </div>
       </section>
 
-      <section className="bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] rounded-lg shadow-md p-8 text-white">
+      <section className="mt-4 scroll-pop-card">
         <div className="flex items-start gap-4">
-          <Mail className="w-8 h-8 flex-shrink-0" />
+          <Mail className="w-8 h-8 flex-shrink-0 text-[#2563eb]" />
           <div>
-            <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
-            <p className="leading-relaxed mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact Us</h2>
+            <p className="leading-relaxed text-gray-700 mb-4">
               We welcome your feedback and suggestions for improving Fulton Care Connect. If you
               know of a resource that should be added to our directory, or if you notice outdated
               information, please let us know.
             </p>
             <a
               href="mailto:info@fultoncareconnect.org"
-              className="inline-flex items-center gap-2 bg-white text-[#2563eb] px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-2 bg-[#2563eb] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#1d4ed8] transition-colors"
             >
               <Mail className="w-5 h-5" />
               info@fultoncareconnect.org
