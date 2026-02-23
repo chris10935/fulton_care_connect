@@ -63,7 +63,7 @@ async function askOllama(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama3.2:3b',
         messages: [systemMessage, ...conversationHistory],
       }),
       signal: controller.signal,
