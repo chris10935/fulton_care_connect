@@ -51,6 +51,7 @@ export function Map() {
   const navigate = useNavigate();
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<MapFilters>({
     city: '',
     categories: [],
@@ -84,18 +85,21 @@ export function Map() {
   async function fetchResources() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      setError(null);
+      const { data, error: dbError } = await supabase
         .from('resources')
         .select('*')
         .not('lat', 'is', null)
         .not('lng', 'is', null)
         .order('name');
 
-      if (error) throw error;
+      if (dbError) throw dbError;
 
+      console.log(`[Map] Loaded ${(data || []).length} resources from Supabase`);
       setResources(data || []);
-    } catch (error) {
-      console.error('Error fetching resources:', error);
+    } catch (err: any) {
+      console.error('Error fetching resources:', err);
+      setError(err?.message || 'Failed to load resources');
     } finally {
       setLoading(false);
     }
@@ -223,6 +227,16 @@ export function Map() {
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb]"></div>
               <p className="mt-4 text-gray-600">Loading map...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full bg-gray-100">
+            <div className="text-center max-w-md px-4">
+              <p className="text-red-600 font-semibold mb-2">Failed to load resources</p>
+              <p className="text-gray-600 text-sm mb-4">{error}</p>
+              <button onClick={fetchResources} className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-4 py-2 rounded-lg text-sm font-medium">
+                Retry
+              </button>
             </div>
           </div>
         ) : (

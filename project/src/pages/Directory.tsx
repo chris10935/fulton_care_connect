@@ -12,6 +12,7 @@ export function Directory() {
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [filters, setFilters] = useState({
     category: searchParams.get('category') || '',
@@ -25,15 +26,18 @@ export function Directory() {
   async function fetchResources() {
     try {
       setLoading(true);
+      setError(null);
       let query = supabase.from('resources').select('*').order('name');
 
-      const { data, error } = await query;
+      const { data, error: dbError } = await query;
 
-      if (error) throw error;
+      if (dbError) throw dbError;
 
+      console.log(`[Directory] Loaded ${(data || []).length} resources from Supabase`);
       setResources(data || []);
-    } catch (error) {
-      console.error('Error fetching resources:', error);
+    } catch (err: any) {
+      console.error('Error fetching resources:', err);
+      setError(err?.message || 'Failed to load resources');
     } finally {
       setLoading(false);
     }
@@ -130,6 +134,14 @@ export function Directory() {
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#2563eb]"></div>
           <p className="mt-4 text-gray-600">Loading resources...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-12 bg-white rounded-lg shadow-md">
+          <p className="text-red-600 font-semibold mb-2">Failed to load resources</p>
+          <p className="text-gray-600 text-sm mb-4">{error}</p>
+          <button onClick={fetchResources} className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-4 py-2 rounded-lg text-sm font-medium">
+            Retry
+          </button>
         </div>
       ) : filteredResources.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow-md">
