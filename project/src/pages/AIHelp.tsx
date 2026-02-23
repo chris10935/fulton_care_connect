@@ -63,7 +63,7 @@ async function askOllama(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama3.2:3b',
+        model: 'llama-3.3-70b-versatile',
         messages: [systemMessage, ...conversationHistory],
       }),
       signal: controller.signal,
@@ -72,7 +72,7 @@ async function askOllama(
     clearTimeout(timeoutId);
 
     if (!res.ok) {
-      throw new Error(`Ollama proxy error: ${res.status}`);
+      throw new Error(`Chat API error: ${res.status}`);
     }
 
     const data: OllamaResponse = await res.json();

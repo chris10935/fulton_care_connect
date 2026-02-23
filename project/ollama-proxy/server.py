@@ -1,20 +1,18 @@
 """
-Ollama Proxy Server
--------------------
-A tiny FastAPI server that forwards chat requests from the React frontend
-to a local Ollama instance and returns the reply.
+Fulton Care Connect – Chat API Server
+--------------------------------------
+A FastAPI server that:
+  1. Searches a local CSV of Fulton County resources
+  2. Enriches conversation context with matching resources
+  3. Forwards the chat to the Groq API (Llama 3 70B)
 
-Prerequisites
+Environment variables (set on Render / .env):
+  GROQ_API_KEY   – required, your Groq Cloud API key
+  PORT           – optional, defaults to 10000 (Render default)
+
+Usage (local dev):
   pip install fastapi uvicorn httpx
-
-Usage
-  # 1. Make sure Ollama is running (default: http://localhost:11434)
-  #    ollama serve
-  #    ollama pull llama3.2:3b
-
-  # 2. Start this proxy
-  #    cd ollama-proxy
-    #    uvicorn server:app --host 127.0.0.1 --port 8001 --reload
+  GROQ_API_KEY=gsk_... uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 """
 
 from __future__ import annotations
@@ -33,14 +31,16 @@ from pydantic import BaseModel
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-OLLAMA_BASE = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
-app = FastAPI(title="Ollama Chat Proxy")
+app = FastAPI(title="Fulton Care Connect Chat API")
 
 # ---------------------------------------------------------------------------
 # Load CSV resource directory at startup
 # ---------------------------------------------------------------------------
-CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "resources_rows.csv"
+CSV_PATH = Path(__file__).resolve().parent / "data" / "resources_rows.csv"
 
 # Each resource stored as a dict for keyword matching
 RESOURCES: list[dict[str, str]] = []
@@ -176,7 +176,7 @@ class ChatMessage(BaseModel):
     content: str
 
 class ChatRequest(BaseModel):
-    model: str = "llama3.2:3b"
+    model: str = GROQ_MODEL
     messages: list[ChatMessage]
 
 class ChatReply(BaseModel):
@@ -193,12 +193,18 @@ async def health():
 @app.post("/api/chat", response_model=ChatReply)
 async def chat(req: ChatRequest):
     """
-    Forwards the conversation to Ollama's /api/chat endpoint
+    Forwards the conversation to the Groq API (OpenAI-compatible)
     and returns the assistant's reply as { "reply": "..." }.
 
     Automatically searches the CSV resource directory for relevant
     resources and injects them into the system context.
     """
+    if not GROQ_API_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="GROQ_API_KEY environment variable is not set.",
+        )
+
     # Extract the latest user message for keyword search
     user_query = ""
     zip_code = None
@@ -245,31 +251,38 @@ async def chat(req: ChatRequest):
     payload: dict[str, Any] = {
         "model": req.model,
         "messages": enriched_messages,
-        "stream": False,
+        "temperature": 0.7,
+        "max_tokens": 1024,
+    }
+
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json",
     }
 
     try:
-        async with httpx.AsyncClient(timeout=300.0) as client:
-            resp = await client.post(f"{OLLAMA_BASE}/api/chat", json=payload)
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(GROQ_CHAT_URL, json=payload, headers=headers)
             resp.raise_for_status()
     except httpx.ConnectError:
         raise HTTPException(
             status_code=502,
-            detail=f"Cannot reach Ollama at {OLLAMA_BASE}. Is 'ollama serve' running?",
+            detail="Cannot reach the Groq API. Please try again later.",
         )
     except httpx.ReadTimeout:
         raise HTTPException(
             status_code=504,
-            detail="Ollama took too long to respond. The model may be overloaded — please try again.",
+            detail="Groq API took too long to respond. Please try again.",
         )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=exc.response.status_code,
-            detail=f"Ollama returned {exc.response.status_code}: {exc.response.text[:300]}",
+            detail=f"Groq returned {exc.response.status_code}: {exc.response.text[:300]}",
         )
 
     data = resp.json()
-    reply_text = data.get("message", {}).get("content", "")
+    choices = data.get("choices", [])
+    reply_text = choices[0]["message"]["content"] if choices else ""
     if not reply_text:
         reply_text = "I'm sorry, I couldn't generate a response. Please try again."
 
