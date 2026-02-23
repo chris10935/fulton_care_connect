@@ -94,12 +94,7 @@ export function Home() {
             >
               Ask AI for Help
             </button>
-            <button
-              onClick={() => navigate('/insights')}
-              className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full transition-colors text-sm"
-            >
-              View Insights
-            </button>
+
           </div>
         </div>
       </section>

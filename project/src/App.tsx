@@ -4,7 +4,6 @@ import { Home } from './pages/Home';
 import { Directory } from './pages/Directory';
 import { ResourceDetail } from './pages/ResourceDetail';
 import { Map } from './pages/Map';
-import { Insights } from './pages/Insights';
 import { AIHelp } from './pages/AIHelp';
 import { About } from './pages/About';
 
@@ -17,7 +16,6 @@ export default function App() {
           <Route path="directory" element={<Directory />} />
           <Route path="resource/:id" element={<ResourceDetail />} />
           <Route path="map" element={<Map />} />
-          <Route path="insights" element={<Insights />} />
           <Route path="ai" element={<AIHelp />} />
           <Route path="about" element={<About />} />
         </Route>

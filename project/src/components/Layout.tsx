@@ -30,7 +30,6 @@ export function Layout() {
               <Link to="/" className="text-white hover:text-white/80 transition-colors font-medium">Home</Link>
               <Link to="/directory" className="text-white hover:text-white/80 transition-colors font-medium">Directory</Link>
               <Link to="/map" className="text-white hover:text-white/80 transition-colors font-medium">Map</Link>
-              <Link to="/insights" className="text-white hover:text-white/80 transition-colors font-medium">Insights</Link>
               <Link to="/ai" className="text-white hover:text-white/80 transition-colors font-medium">AI Help</Link>
               <Link to="/about" className="text-white hover:text-white/80 transition-colors font-medium">About</Link>
             </nav>
@@ -58,7 +57,6 @@ export function Layout() {
                 <Link to="/" className="text-gray-800 font-medium" onClick={() => setMobileMenuOpen(false)}>Home</Link>
                 <Link to="/directory" className="text-gray-800 font-medium" onClick={() => setMobileMenuOpen(false)}>Directory</Link>
                 <Link to="/map" className="text-gray-800 font-medium" onClick={() => setMobileMenuOpen(false)}>Map</Link>
-                <Link to="/insights" className="text-gray-800 font-medium" onClick={() => setMobileMenuOpen(false)}>Insights</Link>
                 <Link to="/ai" className="text-gray-800 font-medium" onClick={() => setMobileMenuOpen(false)}>AI Help</Link>
                 <Link to="/about" className="text-gray-800 font-medium" onClick={() => setMobileMenuOpen(false)}>About</Link>
               </nav>
