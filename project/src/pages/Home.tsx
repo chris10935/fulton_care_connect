@@ -42,22 +42,22 @@ export function Home() {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#2563eb] to-[#1d4ed8] text-white py-20">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#2563eb] to-[#1d4ed8] text-white py-12 sm:py-20">
         <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover z-0">
           <source src="/atl.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-        <div className="absolute inset-0 bg-black/30 z-10" aria-hidden="true" />
+        <div className="absolute inset-0 bg-black/40 z-10" aria-hidden="true" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-20">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-pop-up">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 animate-pop-up">
             Fulton Care Connect
           </h1>
-          <p className="text-xl md:text-2xl mb-8 text-blue-100 animate-pop-up animate-delay-150">
+          <p className="text-base sm:text-xl md:text-2xl mb-6 sm:mb-8 text-blue-100 animate-pop-up animate-delay-150">
             Find free and low-cost help across Fulton County
           </p>
 
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto animate-pop-up animate-delay-300">
-            <div className="bg-white rounded-lg shadow-lg p-2 flex gap-2">
+            <div className="bg-white rounded-lg shadow-lg p-2 flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 placeholder="Enter your city (optional)"
@@ -66,11 +66,11 @@ export function Home() {
                   setCity(e.target.value);
                   setError('');
                 }}
-                className="flex-1 px-4 py-3 text-gray-900 rounded focus:outline-none"
+                className="flex-1 px-4 py-3 text-gray-900 rounded focus:outline-none text-sm sm:text-base"
               />
               <button
                 type="submit"
-                className="bg-[#fb923c] hover:bg-[#ea580c] text-white px-8 py-3 rounded font-semibold transition-colors flex items-center gap-2"
+                className="bg-[#fb923c] hover:bg-[#ea580c] text-white px-6 sm:px-8 py-3 rounded font-semibold transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 <Search className="w-5 h-5" />
                 Search
@@ -81,16 +81,16 @@ export function Home() {
             )}
           </form>
 
-          <div className="mt-6 flex flex-wrap gap-3 justify-center animate-pop-up animate-delay-500">
+          <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row flex-wrap gap-3 justify-center items-center animate-pop-up animate-delay-500">
             <button
               onClick={() => navigate('/directory')}
-              className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full transition-colors text-sm"
+              className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full transition-colors text-sm w-full sm:w-auto"
             >
               Browse All Resources
             </button>
             <button
               onClick={() => navigate('/ai')}
-              className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full transition-colors text-sm"
+              className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full transition-colors text-sm w-full sm:w-auto"
             >
               Ask AI for Help
             </button>
