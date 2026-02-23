@@ -491,27 +491,27 @@ export function AIHelp() {
   /* ---- render ---- */
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-white rounded-lg shadow-lg h-[600px] flex flex-col">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="bg-white rounded-lg shadow-lg h-[calc(100dvh-140px)] sm:h-[600px] flex flex-col">
 
         {/* ========== WELCOME / CATEGORY PICKER ========== */}
         {!chatStarted && !selectedCategory && (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <img src={WELCOME_ICON} alt="Fulton Care Connect" className="w-20 h-20 mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2 sora-header">
+          <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 text-center overflow-y-auto">
+            <img src={WELCOME_ICON} alt="Fulton Care Connect" className="w-16 h-16 sm:w-20 sm:h-20 mb-3 sm:mb-4 flex-shrink-0" />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2 sora-header">
               Welcome to Fulton Care Connect
             </h1>
-            <p className="text-gray-600 mb-8">How can we help today?</p>
+            <p className="text-gray-600 mb-4 sm:mb-8 text-sm sm:text-base">How can we help today?</p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3 w-full max-w-md">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className="flex items-center gap-3 bg-white border-2 border-gray-200 hover:border-[#2563eb] hover:bg-blue-50 rounded-xl px-5 py-4 text-left transition-colors shadow-sm"
+                  className="flex items-center gap-2 sm:gap-3 bg-white border-2 border-gray-200 hover:border-[#2563eb] hover:bg-blue-50 rounded-xl px-3 py-3 sm:px-5 sm:py-4 text-left transition-colors shadow-sm"
                 >
-                  <span className="text-2xl">{cat.emoji}</span>
-                  <span className="font-semibold text-gray-800">{cat.label}</span>
+                  <span className="text-xl sm:text-2xl">{cat.emoji}</span>
+                  <span className="font-medium sm:font-semibold text-gray-800 text-sm sm:text-base">{cat.label}</span>
                 </button>
               ))}
             </div>
@@ -520,7 +520,7 @@ export function AIHelp() {
 
         {/* ========== SUBCATEGORY QUESTIONS ========== */}
         {!chatStarted && selectedCategory && (
-          <div className="flex-1 flex flex-col p-6 overflow-y-auto">
+          <div className="flex-1 flex flex-col p-3 sm:p-6 overflow-y-auto">
             <button
               onClick={() => setSelectedCategory(null)}
               className="self-start text-sm text-[#2563eb] hover:underline mb-4 flex items-center gap-1"
@@ -603,14 +603,14 @@ export function AIHelp() {
             </div>
 
             {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-3 sm:space-y-4">
               {messages.map((message, index) => (
                 <div
                   key={index}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-2xl px-5 py-3 ${
+                    className={`max-w-[88%] sm:max-w-[80%] rounded-2xl px-3 py-2 sm:px-5 sm:py-3 ${
                       message.role === 'user'
                         ? 'bg-[#2563eb] text-white rounded-br-sm'
                         : 'bg-[#fb923c]/15 text-gray-900 rounded-bl-sm'
@@ -694,12 +694,11 @@ export function AIHelp() {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-gray-200">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex gap-2">
-                <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-yellow-800">
-                  <strong>Emergency?</strong> Call 911 for immediate danger or 988 for mental health
-                  crisis.
+            <div className="p-2 sm:p-4 border-t border-gray-200">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-3 mb-2 sm:mb-4 flex gap-2">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs sm:text-sm text-yellow-800">
+                  <strong>Emergency?</strong> Call 911 or 988 for crisis.
                 </p>
               </div>
 
@@ -714,16 +713,16 @@ export function AIHelp() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your question here…"
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563eb] focus:border-transparent"
+                  placeholder="Type your question…"
+                  className="flex-1 min-w-0 px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563eb] focus:border-transparent text-sm sm:text-base"
                   disabled={loading}
                 />
                 <button
                   type="submit"
                   disabled={loading || !input.trim()}
-                  className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3 py-2 sm:px-6 sm:py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 flex-shrink-0"
                 >
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </form>
             </div>
@@ -732,9 +731,9 @@ export function AIHelp() {
       </div>
 
       {/* How to use guide */}
-      <div className="mt-6 bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4 sora-header">How to Use the AI Assistant</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm text-gray-700">
+      <div className="mt-4 sm:mt-6 bg-white rounded-lg shadow p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 sora-header">How to Use the AI Assistant</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 text-sm text-gray-700">
           <div className="flex gap-3">
             <span className="flex-shrink-0 w-8 h-8 rounded-full bg-[#2563eb] text-white flex items-center justify-center font-bold">1</span>
             <div>
@@ -770,13 +769,13 @@ export function AIHelp() {
       </div>
 
       {/* Crisis hotlines */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {CRISIS_HOTLINES.map((hotline) => (
-          <div key={hotline.phone} className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 mb-1 sora-header">{hotline.name}</h3>
+          <div key={hotline.phone} className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+            <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base sora-header">{hotline.name}</h3>
             <a
               href={`tel:${hotline.phone}`}
-              className="text-2xl font-bold text-red-600 hover:underline"
+              className="text-xl sm:text-2xl font-bold text-red-600 hover:underline"
             >
               {hotline.phone}
             </a>
