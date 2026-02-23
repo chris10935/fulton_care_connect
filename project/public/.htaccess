@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# ── API proxy routing ──────────────────────────────────────────────
+# Route ALL /api/* requests to the generic PHP proxy
+RewriteCond %{REQUEST_URI} ^/api/ [NC]
+RewriteRule ^api/(.*)$ api/index.php [L,QSA]
+
+# ── SPA fallback ───────────────────────────────────────────────────
+# For the Vite-built React app: serve index.html for all non-file routes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
